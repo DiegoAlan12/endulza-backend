@@ -1,0 +1,117 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- ENUMS ---
+enum RolUsuario {
+  ADMIN
+  CAJERO
+  CLIENTE
+}
+
+enum TipoPedido {
+  EN_LOCAL
+  PICKUP
+  RUTA
+}
+
+enum StatusPedido {
+  PENDIENTE
+  PREPARADO
+  PAGADO
+  ENTREGADO
+  CANCELADO
+}
+
+// --- MODELOS ---
+
+model Ruta {
+  idRuta       Int          @id @default(autoincrement())
+  nombre       String   
+  diaEntrega   String
+  lugar        String
+  activa       Boolean      @default(true)
+  
+  // Relaciones (Prisma las necesita para saber quién se conecta con quién)
+  usuarios     Usuario[] 
+  pedidos      Pedido[]
+}
+
+model Usuario {
+  idUsuario   Int         @id @default(autoincrement())
+  nombres     String
+  apellidos   String
+  tipoUsuario RolUsuario  @default(CLIENTE)
+  correo      String      @unique
+  password    String
+  telefono    String?     // El signo de interrogación significa que es opcional (nullable)
+  localidad   String?
+  municipio   String?
+  
+  idRuta      Int?
+  ruta        Ruta?       @relation(fields: [idRuta], references: [idRuta])
+
+  pedidos     Pedido[]
+}
+
+// --- TU TURNO ---
+// Escribe aquí abajo los modelos Categoria, Producto, Pedido y DetallePedido.
+
+model Categoria {
+  idCategoria       Int     @id @default(autoincrement())
+  nombreCategoria   String
+  prefijo           String     @unique // Ej. "GOM", "GOA", "CHO"
+
+  //relaciones
+  productos         Producto[]
+}
+
+model Producto{
+  idProducto      Int           @id @default(autoincrement())
+  nombre          String
+  idCategoria     Int
+  unidadMedida    String
+  costo           Decimal       @db.Decimal(10, 2)
+  precio          Decimal       @db.Decimal(10, 2)
+  codigoBarras String    @unique // ¡Garantiza que nunca haya dos códigos iguales!
+  stock           Decimal       @db.Decimal(10, 3)
+  imagenUrl       String?
+
+  //Relaciones
+  categoria       Categoria         @relation(fields: [idCategoria], references:[idCategoria])
+  detalles        DetallePedido[]
+}
+
+model Pedido {
+  idPedido       Int            @id @default(autoincrement())
+  fecha          DateTime       @default(now())
+  idUsuario      Int
+  tipoPedido     TipoPedido
+  status         StatusPedido   @default(PENDIENTE)
+  idRuta         Int?
+  total          Decimal        @db.Decimal(10, 2)
+
+  // Relaciones
+  usuario        Usuario          @relation(fields: [idUsuario], references: [idUsuario])
+  ruta           Ruta?            @relation(fields: [idRuta], references: [idRuta])
+  detalles       DetallePedido[]
+}
+
+model DetallePedido {
+  idDPedido      Int      @id @default(autoincrement())
+  idPedido       Int
+  idProducto     Int
+  cantidad       Decimal  @db.Decimal(10, 3)
+  precioUnitario Decimal  @db.Decimal(10, 2)
+
+  // Relaciones
+  pedido         Pedido   @relation(fields: [idPedido], references: [idPedido])
+  producto       Producto @relation(fields: [idProducto], references: [idProducto])
+}
