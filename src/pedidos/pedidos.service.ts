@@ -191,5 +191,41 @@ export class PedidosService {
       data: { status: nuevoEstado }
     });
   }
+
+  async cancelarPedido(idPedido: number) {
+    // Usamos una transacción para asegurar que la devolución del stock sea perfecta
+    return await this.prisma.$transaction(async (tx) => {
+      
+      // 1. Buscamos el pedido y traemos sus detalles
+      const pedido = await tx.pedido.findUnique({
+        where: { idPedido },
+        include: { detalles: true }
+      });
+
+      if (!pedido) {
+        throw new BadRequestException('Pedido no encontrado');
+      }
+
+      if (pedido.status === 'CANCELADO') {
+        throw new BadRequestException('El pedido ya fue cancelado previamente');
+      }
+
+      // 2. Cambiamos el estado del semáforo a CANCELADO
+      const pedidoCancelado = await tx.pedido.update({
+        where: { idPedido },
+        data: { status: 'CANCELADO' }
+      });
+
+      // 3. Magia de inventario: Devolvemos las cantidades a los estantes virtuales
+      for (const detalle of pedido.detalles) {
+        await tx.producto.update({
+          where: { idProducto: detalle.idProducto },
+          data: { stock: { increment: detalle.cantidad } }
+        });
+      }
+
+      return pedidoCancelado;
+    });
+  }
   
 }

@@ -18,19 +18,31 @@ async create(createProductoDto: CreateProductoDto) {
       throw new BadRequestException('La categoría especificada no existe');
     }
 
-    // 2. Contamos cuántos productos existen actualmente en ESA categoría
-    const cantidadProductos = await this.prisma.producto.count({
+    // 2. Buscamos el ÚLTIMO producto creado en esta categoría para analizar su código
+    const ultimoProducto = await this.prisma.producto.findFirst({
       where: { idCategoria: createProductoDto.idCategoria },
+      orderBy: { idProducto: 'desc' }, // Trae el más reciente
     });
 
-    // 3. Generamos el número secuencial. 
-    // Si hay 0 productos, es el 1. padStart(3, '0') lo convierte en "001".
-    const secuencial = (cantidadProductos + 1).toString().padStart(3, '0');
+    let siguienteNumero = 1;
+
+    // 3. Si ya existen productos, extraemos su número secuencial
+    if (ultimoProducto && ultimoProducto.codigoBarras) {
+      // Reemplazamos el prefijo por vacío para quedarnos solo con el número (Ej: "GOM005" -> "005")
+      const numeroString = ultimoProducto.codigoBarras.replace(categoria.prefijo, '');
+      const numeroActual = parseInt(numeroString, 10);
+      
+      // Si el parseo es exitoso, sumamos 1. Si falla, sumamos a 0.
+      siguienteNumero = (isNaN(numeroActual) ? 0 : numeroActual) + 1;
+    }
+
+    // 4. Generamos el número secuencial a 3 dígitos (Ej. padStart(3, '0') lo convierte en "006")
+    const secuencial = siguienteNumero.toString().padStart(3, '0');
     
-    // 4. Armamos el código de barras final (Ej: "GOM" + "001" = "GOM001")
+    // 5. Armamos el código de barras final (Ej: "GOM" + "006" = "GOM006")
     const codigoGenerado = `${categoria.prefijo}${secuencial}`;
 
-    // 5. Guardamos el producto inyectando nuestro código generado
+    // 6. Guardamos el producto inyectando nuestro código generado
     return await this.prisma.producto.create({
       data: {
         nombre: createProductoDto.nombre,
@@ -39,12 +51,11 @@ async create(createProductoDto: CreateProductoDto) {
         costo: createProductoDto.costo,
         precio: createProductoDto.precio,
         stock: createProductoDto.stock,
-        codigoBarras: codigoGenerado, // ¡Asignación automática!
+        codigoBarras: codigoGenerado, // ¡Asignación automática infalible!
         imagenUrl: createProductoDto.imagenUrl
       },
     });
   }
-
 // En src/productos/productos.service.ts
 
   findAll() {

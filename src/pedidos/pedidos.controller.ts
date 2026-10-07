@@ -50,4 +50,9 @@ export class PedidosController {
   ) {
     return this.pedidosService.actualizarEstado(idPedido, status, pin);
   }
+
+  @Patch(':id/cancelar')
+  cancelarPedido(@Param('id', ParseIntPipe) idPedido: number) {
+    return this.pedidosService.cancelarPedido(idPedido);
+  }
 }
