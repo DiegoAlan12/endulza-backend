@@ -48,7 +48,7 @@ model Usuario {
   idUsuario   Int         @id @default(autoincrement())
   nombres     String
   apellidos   String
-  tipoUsuario RolUsuario  @default(CLIENTE)
+  tipoUsuario RolUsuario  @default(CAJERO)
   correo      String      @unique
   password    String
   telefono    String?     // El signo de interrogación significa que es opcional (nullable)

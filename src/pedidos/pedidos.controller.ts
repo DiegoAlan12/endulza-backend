@@ -1,9 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { PedidosService } from './pedidos.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('pedidos')
+
 export class PedidosController {
   constructor(private readonly pedidosService: PedidosService) {}
 
@@ -51,8 +55,11 @@ export class PedidosController {
     return this.pedidosService.actualizarEstado(idPedido, status, pin);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN')
   @Patch(':id/cancelar')
   cancelarPedido(@Param('id', ParseIntPipe) idPedido: number) {
     return this.pedidosService.cancelarPedido(idPedido);
   }
+
 }
