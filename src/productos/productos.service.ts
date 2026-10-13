@@ -101,4 +101,18 @@ async create(createProductoDto: CreateProductoDto) {
       where: { idProducto: id },
     });
   }
+
+  async sumarStock(id: number, cantidadEntrante: number) {
+    if (cantidadEntrante <= 0) {
+        throw new BadRequestException('La cantidad a ingresar debe ser mayor a cero'); // Faltaba esta validación de seguridad
+      }
+
+      // Le dejamos la suma atómica a la base de datos
+      return await this.prisma.producto.update({
+        where: { idProducto: id },
+        data: {
+          stock: { increment: cantidadEntrante } // ¡Magia atómica de Prisma!
+        },
+      });
+    }
 }
