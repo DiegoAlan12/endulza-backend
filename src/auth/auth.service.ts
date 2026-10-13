@@ -34,7 +34,7 @@ export class AuthService {
       data: {
         nombres: datos.nombres,
         apellidos: datos.apellidos ?? '',
-        correo: datos.correo,
+        correo: datos.correo.toLowerCase(),
         password: passwordEncriptada,
         tipoUsuario: datos.tipoUsuario, // 'ADMIN' o 'CAJERO'
       },
@@ -76,7 +76,7 @@ export class AuthService {
       usuario: {
         nombres: usuario.nombres,
         apellidos: usuario.apellidos,
-        correo: usuario.correo,
+        correo: usuario.correo.toLowerCase(),
         tipoUsuario: usuario.tipoUsuario,
       },
     };

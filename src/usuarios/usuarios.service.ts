@@ -26,7 +26,7 @@ export class UsuariosService {
         nombres: createUsuarioDto.nombres,
         apellidos: createUsuarioDto.apellidos,
         tipoUsuario: createUsuarioDto.tipoUsuario as RolUsuario,
-        correo: createUsuarioDto.correo,
+        correo: createUsuarioDto.correo.toLowerCase(), // Convertimos a minúsculas para consistencia
         password: hashedPassword, // ¡Aquí va la contraseña segura!
         telefono: createUsuarioDto.telefono,
         localidad: createUsuarioDto.localidad,
