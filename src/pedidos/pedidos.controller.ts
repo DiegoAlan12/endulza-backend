@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { PedidosService } from './pedidos.service';
 import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { UpdatePedidoDto } from './dto/update-pedido.dto';
@@ -6,6 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 
+@UseGuards(AuthGuard('jwt'), RolesGuard) // Protegemos la ruta
 @Controller('pedidos')
 
 export class PedidosController {
@@ -21,9 +22,13 @@ export class PedidosController {
   }
 
 
-  @Post()
-  create(@Body() createPedidoDto: CreatePedidoDto) {
-    return this.pedidosService.create(createPedidoDto);
+@Post()
+  create(@Body() createPedidoDto: CreatePedidoDto, @Req() req: any) {
+    // req.user contiene los datos del token JWT (usualmente idUsuario, correo, rol)
+    // Asegúrate de usar el nombre correcto de la propiedad (puede ser 'sub' o 'idUsuario' dependiendo de cómo armaste tu JwtStrategy)
+    const idCajero = req.user.idUsuario; 
+    
+    return this.pedidosService.create(createPedidoDto, idCajero);
   }
 
   @Get()

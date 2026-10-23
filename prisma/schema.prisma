@@ -93,6 +93,7 @@ model Pedido {
   idPedido       Int            @id @default(autoincrement())
   fecha          DateTime       @default(now())
   idUsuario      Int
+  nombreCliente  String?        @default("Público en General")
   tipoPedido     TipoPedido
   status         StatusPedido   @default(PENDIENTE)
   idRuta         Int?

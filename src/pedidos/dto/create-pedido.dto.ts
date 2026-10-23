@@ -1,8 +1,22 @@
-import { IsArray, IsNotEmpty } from 'class-validator';
+import { IsString, IsArray, ValidateNested, IsInt, Min, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class DetallePedidoDto {
+  @IsInt()
+  idProducto: number;
+
+  @IsInt()
+  @Min(1)
+  cantidad: number;
+}
 
 export class CreatePedidoDto {
-  // Le decimos a NestJS que autorice la entrada de la propiedad "detalles"
+  @IsString()
+  @IsOptional()
+  nombreCliente?: string;
+
   @IsArray()
-  @IsNotEmpty()
-  detalles: any[]; 
+  @ValidateNested({ each: true })
+  @Type(() => DetallePedidoDto)
+  detalles: DetallePedidoDto[];
 }
